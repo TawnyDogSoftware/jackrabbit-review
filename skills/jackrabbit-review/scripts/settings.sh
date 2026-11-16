@@ -1,9 +1,9 @@
 #!/bin/bash
 # Print the jackrabbit-review settings that apply in the current repository, and where each
 # one comes from. Later files override earlier ones:
-#   <skill dir>/config.yaml                                  defaults shipped with the skill
-#   ${XDG_CONFIG_HOME:-~/.config}/jackrabbit-review/config.yaml   the user's settings
-#   <repository root>/.jackrabbit-review.yaml                the repository's settings
+#   <skill dir>/jackrabbit-review-config.yaml                    defaults shipped with the skill
+#   ${XDG_CONFIG_HOME:-~/.config}/jackrabbit-review-config.yaml  the user's settings
+#   <repository root>/jackrabbit-review-config.yaml              the repository's settings
 # Each file holds "key: value" lines; "#" starts a comment. Keys: serial, include_uncommitted,
 # base, models. Output: one "key: value | from <file>" line per key ("default" when no file sets it).
 set -euo pipefail
@@ -13,8 +13,8 @@ declare -A val src
 for k in $keys; do val[$k]=""; src[$k]=default; done
 val[serial]=false; val[include_uncommitted]=false
 
-files=("$here/config.yaml" "${XDG_CONFIG_HOME:-$HOME/.config}/jackrabbit-review/config.yaml")
-if top=$(git rev-parse --show-toplevel 2>/dev/null); then files+=("$top/.jackrabbit-review.yaml"); fi
+files=("$here/jackrabbit-review-config.yaml" "${XDG_CONFIG_HOME:-$HOME/.config}/jackrabbit-review-config.yaml")
+if top=$(git rev-parse --show-toplevel 2>/dev/null); then files+=("$top/jackrabbit-review-config.yaml"); fi
 
 for f in "${files[@]}"; do
   [ -f "$f" ] || continue

@@ -2,8 +2,8 @@
 #
 # This file ships with the skill and holds the defaults. A reinstall or `npx skills update`
 # replaces it, so put your own settings in one of these instead (same keys, any subset):
-#   ~/.config/jackrabbit-review/config.yaml    for you, in every repository
-#   .jackrabbit-review.yaml                    in a repository's root, for that repository
+#   ~/.config/jackrabbit-review-config.yaml   for you, in every repository
+#   jackrabbit-review-config.yaml             in a repository's root, for that repository
 # The repository's file wins over yours, and yours over this one. Whatever you say when you
 # start a review wins over all of them ("run them all at once", "skip uncommitted changes").
 

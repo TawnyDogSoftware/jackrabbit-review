@@ -6,8 +6,8 @@ jackrabbit review by name.
 
 - `SKILL.md`: the orchestration.
 - `help.md`: what `/jackrabbit-review help` shows. Keep it in step with `SKILL.md`.
-- `config.yaml`: the default settings; `scripts/settings.sh` layers the user's and the
-  repository's settings files over it.
+- `jackrabbit-review-config.yaml`: the default settings; `scripts/settings.sh` layers the
+  user's and the repository's settings files over it.
 - `prompts/lens-{state,data,boundary,conformance,geometry}.md`: the five reviewer prompts. A
   change to them is tested against recorded cases before it is kept (`update-jackrabbit-review`).
 - `prompts/merge.md`: combines the five reports without dropping anything.

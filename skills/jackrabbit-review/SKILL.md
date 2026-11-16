@@ -59,8 +59,9 @@ There are no flags. The user says what they want in words, and settings files gi
     <skill dir>/scripts/settings.sh
 
 It prints one line per setting with its value and the file it came from: the defaults shipped
-in `<skill dir>/config.yaml`, then the user's `~/.config/jackrabbit-review/config.yaml`, then
-the repository's `.jackrabbit-review.yaml`, each overriding the one before. Show any warning it
+in `<skill dir>/jackrabbit-review-config.yaml`, then the user's
+`~/.config/jackrabbit-review-config.yaml`, then `jackrabbit-review-config.yaml` in the
+repository's root, each overriding the one before. Show any warning it
 prints to the user and carry on.
 
 **2. Apply what the user said.** Anything in the request overrides the files for this run:
@@ -79,7 +80,7 @@ review and carry on without it: verifying every finding is the point of this rev
 
 **3. Say what applies.** Before step 1, tell the user in one line the settings that are not the
 defaults and where each came from, for example: "Settings: against develop (you); one agent at
-a time (~/.config/jackrabbit-review/config.yaml); uncommitted changes included (you)." If all
+a time (~/.config/jackrabbit-review-config.yaml); uncommitted changes included (you)." If all
 are defaults, say "default settings". Do not wait for an answer.
 
 The review covers everything from the merge base with `base` to `HEAD`, plus uncommitted

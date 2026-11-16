@@ -37,9 +37,10 @@ Every finding is always checked against the code; that cannot be turned off.
 To make one of these the default, put it in a settings file. Same keys in each; the later file
 wins, and what you say when you start a review wins over all of them:
 
-1. `config.yaml` in this skill's directory: the defaults. A reinstall or update replaces it.
-2. `~/.config/jackrabbit-review/config.yaml`: yours, for every repository.
-3. `.jackrabbit-review.yaml` in a repository's root: for that repository.
+1. `jackrabbit-review-config.yaml` in this skill's directory: the defaults. A reinstall or
+   update replaces it.
+2. `~/.config/jackrabbit-review-config.yaml`: yours, for every repository.
+3. `jackrabbit-review-config.yaml` in a repository's root: for that repository.
 
 For example:
 

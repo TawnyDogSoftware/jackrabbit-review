@@ -64,9 +64,9 @@ fi
 base=$(git merge-base "$base_ref" HEAD)
 
 # Left out throughout, when untracked: .opencode/goals/ (session state an opencode plugin writes
-# into whatever directory it runs from) and .jackrabbit-review.yaml (this skill's own settings).
+# into whatever directory it runs from) and jackrabbit-review-config.yaml (this skill's own settings).
 # Neither is part of the change.
-harness='^(\.opencode/goals/|\.jackrabbit-review\.yaml$)'
+harness='^(\.opencode/goals/|jackrabbit-review-config\.yaml$)'
 dirty=$(git status --porcelain --untracked-files=all | grep -Ev "^\?\? ${harness#^}" || true)
 untracked_note=""
 if [ -n "$dirty" ] && [ "$dirty_ok" = 0 ]; then

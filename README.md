@@ -45,9 +45,10 @@ There are no flags. Say what you want:
 To make any of these the default, write it in a settings file. The later file wins, and what
 you say when you start a review wins over all of them:
 
-1. `config.yaml` in the skill's directory: the shipped defaults. An update replaces it.
-2. `~/.config/jackrabbit-review/config.yaml`: yours, for every repository.
-3. `.jackrabbit-review.yaml` in a repository's root: for that repository.
+1. `jackrabbit-review-config.yaml` in the skill's directory: the shipped defaults. An update
+   replaces it.
+2. `~/.config/jackrabbit-review-config.yaml`: yours, for every repository.
+3. `jackrabbit-review-config.yaml` in a repository's root: for that repository.
 
 For example:
 
@@ -108,8 +109,8 @@ agent the review still runs, on opencode's general agent, and says so.
 
     npx skills update jackrabbit-review
 
-This replaces the skill's own `config.yaml`; settings in `~/.config/jackrabbit-review/` and in
-your repositories are kept.
+This replaces the skill's own `jackrabbit-review-config.yaml`. Your
+`~/.config/jackrabbit-review-config.yaml` and the files in your repositories are kept.
 
 ## License
 
