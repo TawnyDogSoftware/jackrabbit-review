@@ -79,25 +79,27 @@ name that happens to contain a word, is not one. If something the user asked for
 these settings (to skip the verification, for instance), say that it is not an option of this
 review and carry on without it: verifying every finding is the point of this review.
 
-**3. Say what applies.** Before step 1, tell the user in one line the settings that are not the
-defaults and where each came from, for example: "Settings: against develop (you); one agent at
-a time (~/.config/jackrabbit-review-config.yaml); uncommitted changes included (you)." If all
-are defaults, say "default settings". Do not wait for an answer.
-
-The review covers everything from the merge base with `base` to `HEAD`, plus uncommitted
-changes when `include_uncommitted` is `true`.
-
-**4. When `make_pr_comments` is `true`, check the pull request now,** before any agent starts:
+**3. When `make_pr_comments` is `true`, check the pull request,** before any agent starts:
 
     <skill dir>/scripts/pr-check.sh
 
 It needs the GitHub CLI (`gh`, signed in) and `jq`, and prints the pull request's URL, its base
-branch and its head. If it ends with `ok`, add "comments go to <url>" to the settings line, and
-if `base` is empty, use `origin/<pr_base>` as the base. If it prints a `problem:` line (no `gh`,
-not signed in, no open pull request for this branch, or the pull request's head is not this
-`HEAD` because the branch has not been pushed), tell the user the problem in one line, say that
-the findings will be reported here only unless it is fixed before the review ends, and carry on.
-Do not push or create a pull request to fix it yourself.
+branch and its head. If it ends with `ok` and `base` is empty, use `origin/<pr_base>` as the base. If it prints a
+`problem:` line (no `gh`, not signed in, no open pull request for this branch, or the pull
+request's head is not this `HEAD` because the branch has not been pushed), the review still
+runs; the problem goes in the settings line below. Do not push or create a pull request to fix
+it yourself.
+
+**4. Say what applies, before you run anything else.** Tell the user in one line the settings that are not the
+defaults and where each came from, for example: "Settings: against develop (you); one agent at
+a time (~/.config/jackrabbit-review-config.yaml); uncommitted changes included (you)." If all
+are defaults, say "default settings". When `make_pr_comments` is `true`, end the line with
+"comments go to <pull request URL>", or with the problem `pr-check.sh` printed and "findings
+will be reported here only unless that is fixed before the review ends". Do not run
+`prepare.sh` before this line has been shown. Do not wait for an answer.
+
+The review covers everything from the merge base with `base` to `HEAD`, plus uncommitted
+changes when `include_uncommitted` is `true`.
 
 ## Choosing the models
 
