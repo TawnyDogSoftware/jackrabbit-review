@@ -1,7 +1,8 @@
 ---
 name: jackrabbit-review
+license: MIT
 description: Jackrabbit review - a deep, multi-agent review of the current branch, meant to leave nothing for a later review round to find. Five independent reviewers with different focuses (state and async, data integrity, boundary, conformance, geometry and gestures), a merge that drops nothing, a check of every finding against the code, and one ranked list. Use only when the user asks for it by name, in any wording ("perform a jackrabbit review", "run jackrabbit on this branch", "jackrabbit this against develop", "/jackrabbit-review"). Do not use it for a review request that does not name it, however thorough the user wants it to be - it takes seven to nine agent runs and 20 to 30 minutes or more; offer it instead. With "help" it only explains how to use it.
-argument-hint: "[help] [<base-ref>] [which models to use, in your own words] [--serial] [--no-verify] [--include-uncommitted]"
+argument-hint: "[help] [what to review against, which models, run one at a time, include uncommitted changes - all in your own words]"
 ---
 
 # Jackrabbit review
@@ -17,11 +18,9 @@ check that its output exists, and assemble the final list.
 What was passed to this skill, if anything: `$ARGUMENTS`
 
 - **By the slash command:** that text is what the user typed after it.
-- **On your own,** because the user asked for a jackrabbit review by name: take the same things
-  from their request. "Against develop" is the base, "one at a time" is `--serial`, "skip the
-  verification" is `--no-verify`, and so on. Before step 1, tell the user in one line that you
-  are running a jackrabbit review, against which base, and that it takes seven to nine agent
-  runs. Do not wait for an answer.
+- **On your own,** because the user asked for a jackrabbit review by name: their request is
+  that text. Before step 1, tell the user in one line that you are running a jackrabbit review
+  and that it takes seven to nine agent runs. Do not wait for an answer.
 
 Only start this skill on your own when the user named it. If they asked for a careful or
 thorough review without naming it, do an ordinary review and mention that a jackrabbit review
@@ -51,23 +50,46 @@ does or what its options are, and is not asking for a review, your whole task is
    for the user, and a summary of it in your own words is not what was asked for.
 3. Stop. Do not run `prepare.sh` and do not start any agent.
 
-## Arguments
+## Settings
 
-- `<base-ref>`: the branch or commit the change is measured against. Default: the remote's
-  default branch. The review covers everything from the merge base to `HEAD`.
-- `--serial`: run one agent at a time (use when rate limits or usage are a concern). This one
-  and `--no-verify` are for you; they are not passed to `prepare.sh`.
-- `--no-verify`: stop after the merge.
-- `--include-uncommitted`: also review uncommitted changes in the working tree.
-- **Which models to use, in the user's own words.** For example "use opus 5.5 on high", "fable
-  for the reviewers and opus to verify", "run the data reviewer on gpt-6 sol". There is no
-  fixed form, and it can also come from the request around the command. Without it every agent
-  runs on the default. What to do with it is in "Choosing the models".
+There are no flags. The user says what they want in words, and settings files give the defaults.
+
+**1. Read the settings files.** From the repository being reviewed, run:
+
+    <skill dir>/scripts/settings.sh
+
+It prints one line per setting with its value and the file it came from: the defaults shipped
+in `<skill dir>/config.yaml`, then the user's `~/.config/jackrabbit-review/config.yaml`, then
+the repository's `.jackrabbit-review.yaml`, each overriding the one before. Show any warning it
+prints to the user and carry on.
+
+**2. Apply what the user said.** Anything in the request overrides the files for this run:
+
+| Setting | Values | The user says, for example |
+|---|---|---|
+| `base` | the branch or commit to measure against; empty means the remote's default branch | "against develop", "compare with main", "since abc123" |
+| `serial` | `true`: one agent at a time; `false`: side by side | "run the agents in serial", "one at a time", "go easy on the rate limit"; "run them all at once" |
+| `include_uncommitted` | `true`: also review uncommitted changes | "also review my uncommitted code", "include what I haven't committed"; "only what's committed" |
+| `models` | words naming models, as in "Choosing the models" | "use fable", "opus on high to verify" |
+
+Act only on a plain instruction. A sentence that mentions one of these in passing, or a branch
+name that happens to contain a word, is not one. If something the user asked for is not one of
+these settings (to skip the verification, for instance), say that it is not an option of this
+review and carry on without it: verifying every finding is the point of this review.
+
+**3. Say what applies.** Before step 1, tell the user in one line the settings that are not the
+defaults and where each came from, for example: "Settings: against develop (you); one agent at
+a time (~/.config/jackrabbit-review/config.yaml); uncommitted changes included (you)." If all
+are defaults, say "default settings". Do not wait for an answer.
+
+The review covers everything from the merge base with `base` to `HEAD`, plus uncommitted
+changes when `include_uncommitted` is `true`.
 
 ## Choosing the models
 
-Skip this section when the user did not say which models to use: every stage then runs on the
-default. Otherwise do this before step 1.
+Skip this section when neither the user nor the `models` setting says which models to use:
+every stage then runs on the default. Otherwise do this before step 1. What the user said
+replaces the setting entirely; it is not merged with it.
 
 1. **Read what was asked, stage by stage.** The stages are the five reviewers (`state`, `data`,
    `boundary`, `conformance`, `geometry`), the merge and the verifiers. A model named without a
@@ -133,8 +155,8 @@ the model comes from the end of the stage's line (`| model <model>`) that the sc
     as the tool's `model`. If the tool has no `model` parameter, this version of opencode
     cannot choose a model per agent: say so and stop.
   - Where the tool returns at once with a session id, a stage is finished when its
-    `<subagent>` message arrives. Wait for that before you check the output file, and with
-    `--serial` before you start the next agent.
+    `<subagent>` message arrives. Wait for that before you check the output file, and when
+    `serial` is `true` before you start the next agent.
 
 In both, the prompt for an agent is exactly this and nothing more:
 
@@ -146,7 +168,11 @@ Do not add a description of the change, your own concerns, or anything another a
 
 From the repository being reviewed, run:
 
-    <skill dir>/scripts/prepare.sh [<base-ref>] [--include-uncommitted] [--model <value from "Choosing the models">]
+    <skill dir>/scripts/prepare.sh [<base>] [--include-uncommitted] [--model '<value>']
+
+with `<base>` when the `base` setting is not empty, `--include-uncommitted` when
+`include_uncommitted` is `true`, and `--model` with the value from "Choosing the models" when
+models were named. These are the script's own options; the user never types them.
 
 It resolves the base, creates a run directory inside the git directory (nothing is added to the
 working tree), renders the prompts, and prints the run directory, the diff size, the models that
@@ -159,8 +185,8 @@ value and run it again.
 
 Start one agent per reviewer line that `prepare.sh` printed, on that line's model: state, data, boundary, conformance, geometry. The geometry reviewer ends early by itself when the change has no gesture, layout or chooser code.
 
-- Send all five in one message so they run side by side. With `--serial`, send them one at a
-  time and wait for each.
+- Send all five in one message so they run side by side. When `serial` is `true`, send them one
+  at a time and wait for each.
 - Each reviewer must come to the code without a hint: the one-line prompt above, with that
   reviewer's prompt file, is all it gets.
 
@@ -173,8 +199,7 @@ the others do not, so a missing one means a weaker review.
 
 Start one agent the same way, pointing at the merge prompt file, on the model at the end of the `merge:` line. It writes `merged.md` in the run directory. It reads only the five reports.
 
-Check that `merged.md` exists. With `--no-verify`, go to step 5 and present the merged review's
-finding headings (`grep '^### F' merged.md`) with the path to the file.
+Check that `merged.md` exists.
 
 ## 4. Verify
 
@@ -184,7 +209,7 @@ Run:
 
 It prints the number of findings and one line per verifier with its prompt file, output file
 and model (one verifier per 14 findings or fewer). Start one agent per line, the same way; in
-one message, or one at a time with `--serial`.
+one message, or one at a time when `serial` is `true`.
 
 Each verifier tries to refute its findings against the code and writes a table with one verdict
 per finding: REAL, REAL-MINOR, UNVERIFIED, LATENT, INTENDED or WRONG. It also checks each
@@ -208,7 +233,7 @@ Write `summary.md` in the run directory and give the same content to the user:
 4. **Set aside.** INTENDED and WRONG findings, one line each, with the document or line that
    defeats them. They are listed, never deleted: a verifier can be wrong.
 5. **Leads not investigated**, design questions and pre-existing defects, as the merge listed them.
-6. **Run.** Base and head, diff size, which reviewers ran, the model each stage ran on (the
+6. **Run.** Base and head, diff size, the settings that were not defaults, which reviewers ran, the model each stage ran on (the
    actual model, also where the line said `default`; where a stage ran on anything but Opus on
    medium effort in Claude Code, add that the prompts were tuned on that configuration, not on
    this one), anything that failed or was skipped, and the paths to `merged.md` (full scenarios

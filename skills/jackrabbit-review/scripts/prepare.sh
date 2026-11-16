@@ -63,13 +63,14 @@ if [ -z "$base_ref" ]; then
 fi
 base=$(git merge-base "$base_ref" HEAD)
 
-# Untracked files under .opencode/goals/ are session state that an opencode plugin writes into
-# whatever directory it runs from. They are not part of any change and are left out throughout.
-harness='^\.opencode/goals/'
+# Left out throughout, when untracked: .opencode/goals/ (session state an opencode plugin writes
+# into whatever directory it runs from) and .jackrabbit-review.yaml (this skill's own settings).
+# Neither is part of the change.
+harness='^(\.opencode/goals/|\.jackrabbit-review\.yaml$)'
 dirty=$(git status --porcelain --untracked-files=all | grep -Ev "^\?\? ${harness#^}" || true)
 untracked_note=""
 if [ -n "$dirty" ] && [ "$dirty_ok" = 0 ]; then
-  echo "the working tree has uncommitted changes; commit or stash them, or pass --include-uncommitted" >&2
+  echo "the working tree has uncommitted changes. Commit or stash them, or ask for them to be reviewed too (include_uncommitted in the settings, or say so when starting the review)." >&2
   exit 3
 fi
 if [ -n "$dirty" ]; then

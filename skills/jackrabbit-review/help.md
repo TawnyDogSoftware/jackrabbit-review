@@ -9,37 +9,53 @@ It only reads. It does not fix, commit, push or comment on a pull request.
 
 ## Run it
 
-From the repository, on the branch to review, with your work committed:
+From the repository, on the branch to review:
 
-    /jackrabbit-review                 review HEAD against the default branch
-    /jackrabbit-review develop         measure against another branch or commit
+    /jackrabbit-review
+    /jackrabbit-review against develop
     /jackrabbit-review help            show this
 
-You can also just ask, by name: "perform a jackrabbit review", "do a jackrabbit review against
-develop". It only starts when you name it; a request for a careful review that does not say
-"jackrabbit" gets an ordinary review.
+Or ask by name: "perform a jackrabbit review", "do a jackrabbit review against develop". It
+only starts when you name it; a request for a careful review that does not say "jackrabbit"
+gets an ordinary review.
 
 ## Options
 
-| Option | What it does |
+There are no flags. Say what you want, in the same message:
+
+| You say | What it does |
 |---|---|
-| `<base-ref>` | The branch or commit the change is measured against. Default: the remote's default branch. Everything from the merge base to `HEAD` is reviewed. |
-| `--serial` | One agent at a time. Slower, but easier on rate limits and usage. |
-| `--no-verify` | Stop after the merge. You get the merged findings without the check against the code. |
-| `--include-uncommitted` | Also review uncommitted changes. Without it, an unclean working tree stops the run. |
+| "against develop", "compare with main" | Measures the change against that branch or commit. Default: the remote's default branch. Everything from the merge base to `HEAD` is reviewed. |
+| "run the agents in serial", "one at a time" | One agent at a time. Slower, but easier on rate limits and usage. |
+| "also review my uncommitted code" | Includes staged, unstaged and new files. Without it, uncommitted changes stop the run. |
+| "use fable", "fable for the reviewers and opus on high to verify" | Chooses the models. See below. |
+
+Every finding is always checked against the code; that cannot be turned off.
+
+## Settings files
+
+To make one of these the default, put it in a settings file. Same keys in each; the later file
+wins, and what you say when you start a review wins over all of them:
+
+1. `config.yaml` in this skill's directory: the defaults. A reinstall or update replaces it.
+2. `~/.config/jackrabbit-review/config.yaml`: yours, for every repository.
+3. `.jackrabbit-review.yaml` in a repository's root: for that repository.
+
+For example:
+
+    serial: true                 # always one agent at a time
+    include_uncommitted: true    # always include uncommitted changes
+    base: develop                # measure against develop
+    models: fable for the reviewers and opus on high to verify
+
+The review says at the start which settings apply and where each came from.
 
 ## Choosing the models
-
-Say it in your own words, in the same message:
-
-    /jackrabbit-review use fable
-    /jackrabbit-review develop use fable for the reviewers and opus on high to verify
-    /jackrabbit-review run the data reviewer on gpt-6 sol
 
 You are told in one line what was settled on before any agent starts. If a model cannot be
 started from where you are, the run stops; it never substitutes another model.
 
-Without this, every agent runs on the default: Opus on medium effort in Claude Code, and in
+Without a choice, every agent runs on the default: Opus on medium effort in Claude Code, and in
 opencode the model set in `~/.config/opencode/agent/jackrabbit-reviewer.md`, or the session's
 model if that file sets none. The reviewer prompts were tuned on the Claude Code default.
 
