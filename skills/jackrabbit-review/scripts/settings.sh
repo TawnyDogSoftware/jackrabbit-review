@@ -5,13 +5,13 @@
 #   ${XDG_CONFIG_HOME:-~/.config}/jackrabbit-review-config.yaml  the user's settings
 #   <repository root>/jackrabbit-review-config.yaml              the repository's settings
 # Each file holds "key: value" lines; "#" starts a comment. Keys: serial, include_uncommitted,
-# base, models. Output: one "key: value | from <file>" line per key ("default" when no file sets it).
+# make_pr_comments, base, models. Output: one "key: value | from <file>" line per key ("default" when no file sets it).
 set -euo pipefail
 here=$(cd "$(dirname "$0")/.." && pwd)
-keys="serial include_uncommitted base models"
+keys="serial include_uncommitted make_pr_comments base models"
 declare -A val src
 for k in $keys; do val[$k]=""; src[$k]=default; done
-val[serial]=false; val[include_uncommitted]=false
+val[serial]=false; val[include_uncommitted]=false; val[make_pr_comments]=false
 
 files=("$here/jackrabbit-review-config.yaml" "${XDG_CONFIG_HOME:-$HOME/.config}/jackrabbit-review-config.yaml")
 if top=$(git rev-parse --show-toplevel 2>/dev/null); then files+=("$top/jackrabbit-review-config.yaml"); fi
@@ -30,7 +30,7 @@ for f in "${files[@]}"; do
     v="${v%"${v##*[![:space:]]}"}"
     [[ $v =~ ^\"(.*)\"$ || $v =~ ^\'(.*)\'$ ]] && v=${BASH_REMATCH[1]}
     case " $keys " in *" $k "*) ;; *) echo "warning: $f:$n: unknown setting \"$k\" (settings are: $keys)" >&2; continue ;; esac
-    if [ "$k" = serial ] || [ "$k" = include_uncommitted ]; then
+    if [ "$k" = serial ] || [ "$k" = include_uncommitted ] || [ "$k" = make_pr_comments ]; then
       case "${v,,}" in
         true|yes|on) v=true ;; false|no|off) v=false ;;
         "") continue ;;

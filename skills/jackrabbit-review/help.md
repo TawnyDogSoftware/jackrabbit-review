@@ -5,7 +5,8 @@ round to find. Five reviewers each look for a different kind of defect (state an
 integrity, boundary, conformance, geometry and gestures). Their reports are merged without
 dropping anything, every finding is checked against the code, and you get one ranked list.
 
-It only reads. It does not fix, commit, push or comment on a pull request.
+It only reads. It does not fix, commit or push. It comments on the pull request only when you
+ask it to.
 
 ## Run it
 
@@ -28,6 +29,7 @@ There are no flags. Say what you want, in the same message:
 | "against develop", "compare with main" | Measures the change against that branch or commit. Default: the remote's default branch. Everything from the merge base to `HEAD` is reviewed. |
 | "run the agents in serial", "one at a time" | One agent at a time. Slower, but easier on rate limits and usage. |
 | "also review my uncommitted code" | Includes staged, unstaged and new files. Without it, uncommitted changes stop the run. |
+| "make inline comments on the PR for findings", "comment on the PR with whatever jackrabbit finds" | Posts the findings to the branch's pull request: one review, with an inline comment and a suggested fix on each confirmed finding. Needs `gh` (signed in) and `jq`, and the branch pushed. Without it, findings are only reported here. |
 | "use fable", "fable for the reviewers and opus on high to verify" | Chooses the models. See below. |
 
 Every finding is always checked against the code; that cannot be turned off.
@@ -46,6 +48,7 @@ For example:
 
     serial: true                 # always one agent at a time
     include_uncommitted: true    # always include uncommitted changes
+    make_pr_comments: true       # always post the findings to the pull request
     base: develop                # measure against develop
     models: fable for the reviewers and opus on high to verify
 

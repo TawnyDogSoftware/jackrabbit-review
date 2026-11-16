@@ -13,7 +13,14 @@ serial: false
 # Also review changes that are not committed yet (staged, unstaged and new files).
 include_uncommitted: false
 
-# The branch or commit to measure the change against. Empty: the remote's default branch.
+# Post the findings to the branch's pull request as one GitHub review, with an inline comment
+# and a suggested fix on each finding's line. Needs the GitHub CLI (gh), signed in, and an open
+# pull request whose head is the commit under review. false: findings are only reported in the
+# agent session. ("make-pr-comments" is accepted as the key too.)
+make_pr_comments: false
+
+# The branch or commit to measure the change against. Empty: the pull request's base branch
+# when commenting on one, otherwise the remote's default branch.
 base:
 
 # Which models to use, in words, as you would say it when starting a review.

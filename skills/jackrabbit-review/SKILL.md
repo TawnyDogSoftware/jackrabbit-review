@@ -68,9 +68,10 @@ prints to the user and carry on.
 
 | Setting | Values | The user says, for example |
 |---|---|---|
-| `base` | the branch or commit to measure against; empty means the remote's default branch | "against develop", "compare with main", "since abc123" |
+| `base` | the branch or commit to measure against; empty means the pull request's base branch when `make_pr_comments` is `true`, otherwise the remote's default branch | "against develop", "compare with main", "since abc123" |
 | `serial` | `true`: one agent at a time; `false`: side by side | "run the agents in serial", "one at a time", "go easy on the rate limit"; "run them all at once" |
 | `include_uncommitted` | `true`: also review uncommitted changes | "also review my uncommitted code", "include what I haven't committed"; "only what's committed" |
+| `make_pr_comments` | `true`: post the findings to the branch's pull request as inline comments with suggested fixes (step 6); `false`: report them here only | "make inline comments on the PR for findings", "comment on the PR with whatever jackrabbit finds", "post it to the PR"; "don't comment on the PR", "just tell me" |
 | `models` | words naming models, as in "Choosing the models" | "use fable", "opus on high to verify" |
 
 Act only on a plain instruction. A sentence that mentions one of these in passing, or a branch
@@ -85,6 +86,18 @@ are defaults, say "default settings". Do not wait for an answer.
 
 The review covers everything from the merge base with `base` to `HEAD`, plus uncommitted
 changes when `include_uncommitted` is `true`.
+
+**4. When `make_pr_comments` is `true`, check the pull request now,** before any agent starts:
+
+    <skill dir>/scripts/pr-check.sh
+
+It needs the GitHub CLI (`gh`, signed in) and `jq`, and prints the pull request's URL, its base
+branch and its head. If it ends with `ok`, add "comments go to <url>" to the settings line, and
+if `base` is empty, use `origin/<pr_base>` as the base. If it prints a `problem:` line (no `gh`,
+not signed in, no open pull request for this branch, or the pull request's head is not this
+`HEAD` because the branch has not been pushed), tell the user the problem in one line, say that
+the findings will be reported here only unless it is fixed before the review ends, and carry on.
+Do not push or create a pull request to fix it yourself.
 
 ## Choosing the models
 
@@ -243,12 +256,48 @@ Write `summary.md` in the run directory and give the same content to the user:
 Use the verifiers' verdicts as written. If you believe one is wrong, say so in a separate note
 under the list; do not move the finding.
 
+## 6. Comment on the pull request
+
+Only when `make_pr_comments` is `true`. Otherwise the review ends with step 5.
+
+1. Run `<skill dir>/scripts/pr-check.sh <run directory>` again: it checks that the pull request's
+   head is still the reviewed commit and writes `pr.json`. If it prints a `problem:` line, do
+   not post. Tell the user why, and that the findings are in `summary.md`.
+2. Write `<run directory>/pr-comments.json`:
+
+       {"summary": "<markdown>", "comments": [{"finding": "F3", "path": "src/a.ts", "line": 42, "start_line": 40, "body": "<markdown>"}]}
+
+   - One comment per finding rated REAL or REAL-MINOR, on its deciding line: the `file:line`
+     from the verdict table, as a path from the repository root and a line number in the file
+     at `HEAD`. Add `start_line` only when the finding is about a range of lines that ends at
+     `line`. For these findings, read their sections in `merged.md`.
+   - Each comment body: a first line `**jackrabbit-review <id> · <verdict> · <severity>:**
+     <title>`; then what goes wrong, in two to four sentences with the concrete scenario from
+     the merged review; then `**Suggested fix:**` and the fix constraint from the merged review
+     in words, including what the fix must not break. Do not write a ```suggestion block or
+     code: no agent has checked a fix against the code.
+   - `summary`: one line saying this is an automated jackrabbit review, the counts by verdict,
+     the models it ran on, and then the Decide list (UNVERIFIED and LATENT findings, one line
+     each with `file:line`). Do not post INTENDED or WRONG findings or the leads.
+3. Run `<skill dir>/scripts/post-review.sh <run directory>`. It posts everything as one review
+   (comment only, never an approval or a request for changes). A comment whose line is not in
+   the pull request's diff goes into the review's summary instead, with its `file:line`. It
+   prints the review's URL.
+4. Add to the Run section of `summary.md`, and tell the user: the URL, how many comments were
+   inline and how many went into the summary. If posting failed, give the error and say the
+   findings are in `summary.md`; do not retry more than once.
+
+Post once per run. If the user asks to post again later, use the same run directory.
+
 ## Rules
 
-- Read-only. Do not fix anything, commit, push, or comment on a pull request as part of this
-  skill. If the user wants fixes, that is a separate request after they have seen the list.
-- No agent in this skill may use GitHub or read earlier review comments. The value of the review
-  is that it comes from the code alone.
+- Read-only. Do not fix anything, commit or push as part of this skill. If the user wants fixes,
+  that is a separate request after they have seen the list.
+- The only thing this skill writes outside the run directory is the pull request review of
+  step 6, and only when `make_pr_comments` is `true`.
+- No reviewer, merge or verify agent may use GitHub or read earlier review comments. The value
+  of the review is that it comes from the code alone. Only you use `gh`, and only through
+  `pr-check.sh` and `post-review.sh`.
 - Report what happened. If a stage failed or a reviewer is missing, the summary says so first.
 - Do not change the prompt files as part of a review. If a later review or a bug shows a defect
   this review missed, the prompts are changed separately and tested against earlier cases first

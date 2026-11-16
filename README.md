@@ -16,8 +16,10 @@ Five reviewers work independently, each looking for one kind of defect:
 A merge step combines their reports without dropping anything. Verifiers then try to refute
 every finding against the code, and you get one ranked list: fix, decide, minor, set aside.
 
-It only reads. It does not fix, commit, push or comment on a pull request, and no reviewer may
-use GitHub or read earlier review comments: the review comes from the code alone.
+By default it only reads and reports in your agent session. Ask it to, and it posts the
+findings to the pull request as inline comments with suggested fixes. It never fixes, commits or
+pushes, and no reviewer may use GitHub or read earlier review comments: the review comes from
+the code alone.
 
 ## Use
 
@@ -36,6 +38,12 @@ There are no flags. Say what you want:
 - **One agent at a time:** "run the agents in serial". Slower, easier on rate limits.
 - **Uncommitted changes:** "also review my uncommitted code". Otherwise uncommitted changes stop
   the run.
+- **Comments on the pull request:** "make inline comments on the PR for findings", "comment on
+  the PR with whatever jackrabbit finds". It posts one GitHub review (a comment, never an
+  approval or a request for changes) with an inline comment on each confirmed finding: what
+  goes wrong, and a suggested fix in words. Findings whose lines are not in the pull request's
+  diff, and the ones it could not confirm, go in the review's summary. The branch must be pushed
+  and have an open pull request.
 - **Models:** "use fable", "fable for the reviewers and opus on high to verify", "run the data
   reviewer on gpt-6 sol". The agent works out what that means where it runs, tells you in one
   line before it starts, and stops instead of substituting if a model is not available.
@@ -54,6 +62,7 @@ For example:
 
     serial: true                 # always one agent at a time
     include_uncommitted: true    # always include uncommitted changes
+    make_pr_comments: true       # always post the findings to the pull request
     base: develop                # measure against develop
     models: fable for the reviewers and opus on high to verify
 
@@ -91,7 +100,10 @@ pull request on a change that matters, not on every commit.
     npx skills add TawnyDogSoftware/jackrabbit-review
 
 It works with Claude Code and opencode, and with other agents that load skills and can start
-subagents. It needs `git` and `bash`.
+subagents.
+
+Requirements: `git` and `bash`. To post comments on pull requests, also the
+[GitHub CLI](https://cli.github.com) (`gh`, signed in with `gh auth login`) and `jq`.
 
 ### How do I set it up for opencode?
 
